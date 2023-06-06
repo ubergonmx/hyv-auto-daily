@@ -1,0 +1,6 @@
+name = "hyv-auto-daily"
+main = "src/index.ts"
+compatibility_date = "2023-06-06"
+
+[triggers]
+crons = [ "1 * * * *" ]

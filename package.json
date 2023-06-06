@@ -1,0 +1,14 @@
+{
+  "name": "hyv-auto-daily",
+  "version": "0.0.0",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20230518.0",
+    "typescript": "^5.1.3",
+    "wrangler": "3.0.1"
+  },
+  "private": true,
+  "scripts": {
+    "start": "wrangler dev",
+    "deploy": "wrangler deploy"
+  }
+}

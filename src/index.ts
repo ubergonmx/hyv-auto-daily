@@ -93,7 +93,6 @@ async function checkIn(URL:HoyoverseURL, cookie:string){
 }
 
 async function autoDailyCheckIn(game:Game, webhook:string, cookie:string){	
-	// Genshin Impact
 	let message = await checkIn(game.url, cookie);
 	if (!message || message === ""){
 		message = "Failed to check in";

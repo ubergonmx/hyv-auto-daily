@@ -26,7 +26,10 @@ export default {
 		controller: ScheduledController,
 		env: Env,
 		ctx: ExecutionContext
-	): Promise<void> {
-		console.log(`Hello World!`);
+	): Promise<Response> {
+		return new Response('Hello World from Scheduled!', { status: 200 });
+	},
+	async fetch(request:Request, env:Env, context:ExecutionContext) : Promise<Response>{
+		return new Response(`Hello World!`, { status: 200 });
 	},
 };

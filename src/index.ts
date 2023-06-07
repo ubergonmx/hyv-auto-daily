@@ -26,10 +26,19 @@ export default {
 		controller: ScheduledController,
 		env: Env,
 		ctx: ExecutionContext
-	): Promise<Response> {
-		return new Response('Hello World from Scheduled!', { status: 200 });
+	): Promise<void> {
+		console.log(controller.scheduledTime, controller.cron, env, ctx)
+		ctx.waitUntil(new Promise(resolve => setTimeout(resolve, 5000)));
 	},
 	async fetch(request:Request, env:Env, context:ExecutionContext) : Promise<Response>{
-		return new Response(`Hello World!`, { status: 200 });
+		let result = "";
+		await fetch('https://sg-public-api.hoyolab.com/event/luna/os/sign?lang=en-us&act_id=e202303301540311', {
+			method: 'POST',
+			headers: {
+				//@ts-ignore
+				"Cookie": `${env.ACCOUNT_COOKIE}`
+			},
+		}).then(res => res.text()).then(text => result = text);
+		return new Response(result, { status: 200 });
 	},
 };

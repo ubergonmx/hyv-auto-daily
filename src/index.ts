@@ -88,7 +88,8 @@ async function checkIn(URL:HoyoverseURL, cookie:string){
 			"Cookie": `${cookie}`
 		},
 	})
-	.then(res => res.text()).then((data:any) => {result = JSON.parse(data).message});
+	.then(res => res.text())
+	.then((data:any) => {result = JSON.parse(data).message});
 	return result;
 }
 
@@ -102,7 +103,10 @@ async function autoDailyCheckIn(game:Game, webhook:string, cookie:string){
 	await notifyDiscordWebhook(webhook, game.discordPayload);
 }
 
-async function notifyDiscordWebhook(webhook:string, {username, avatarURL, content}:DiscordPayload){
+async function notifyDiscordWebhook(
+	webhook:string,
+	{ username, avatarURL, content }:DiscordPayload
+):Promise<void>{
 	let payload = JSON.stringify({
 		"username": username,
 		"avatar_url": avatarURL,
@@ -115,5 +119,7 @@ async function notifyDiscordWebhook(webhook:string, {username, avatarURL, conten
 			"Content-Type": "application/json"
 		},
 		body: payload
-	}).then(res => res.text()).then(text => console.log("[Notified Discord]",text));
+	})
+	.then(res => res.text())
+	.then(text => console.log("[Notified Discord]",text));
 }

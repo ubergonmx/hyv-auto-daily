@@ -19,9 +19,10 @@ export interface Env {
 	//
 	// Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
 	// MY_BUCKET: R2Bucket;
+	DISCORD_WEBHOOK:string, ACCOUNT_COOKIE:string, DISCORD_USER_ID:string
 }
 
-enum HoyoverseURL {
+enum HoyoverseAPI {
 	GENSHIN = "https://sg-hk4e-api.hoyolab.com/event/sol/sign?lang=en-us&act_id=e202102251931481",
 	HSR = "https://sg-public-api.hoyolab.com/event/luna/os/sign?lang=en-us&act_id=e202303301540311",
 }
@@ -34,27 +35,46 @@ interface DiscordPayload {
 
 interface Game {
 	name: string;
-	url: HoyoverseURL;
+	url: HoyoverseAPI;
 	discordPayload: DiscordPayload
+	successMessage?(): string;
+	failedMessage?(): string;
+	claimedAlreadyMessage?(): string;
 }
 
 const games: Game[] = [
 	{
 		name: "Genshin Impact",
-		url: HoyoverseURL.GENSHIN,
+		url: HoyoverseAPI.GENSHIN,
 		discordPayload: {
-			username: "Genshin Impact Check-in",
+			username: "Genshin Impact Check-In",
 			avatarURL: "https://upload-os-bbs.hoyolab.com/upload/2021/08/31/141033342/8fae6ff523cf0eb911df33e08fbb3f81_6839218126942510885.jpg",
 			content: ""
+		},
+		successMessage(): string {
+			const voiceLines = [
+				"What do we have here...",
+				"I can put these to good use.",
+				"Ha, at least good luck doesn't discriminate by clan.",
+			];
+			return `Successfully checked in!\n\n *${voiceLines[Math.floor(Math.random() * voiceLines.length)]}*`;
 		}
 	},
 	{
 		name: "Honkai Star Rail",
-		url: HoyoverseURL.HSR,
+		url: HoyoverseAPI.HSR,
 		discordPayload: {
-			username: "Honkai Star Rail Check-in",
+			username: "Honkai Star Rail Check-In",
 			avatarURL: "https://upload-os-bbs.hoyolab.com/upload/2023/03/14/145173938/214a8d73665c28493289c76d1ef31a91_5039956508100338870.jpg?x-oss-process=image/resize,s_1000/quality,q_80/auto-orient,0/interlace,1/format,jpg",
 			content: ""
+		},
+		successMessage(): string {
+			const voiceLines = [
+				"Oh thanks, but no thanks.",
+				"Not bad.",
+				"...Doesn't look very interesting.",
+			];
+			return `Successfully claimed daily rewards!\n\n *${voiceLines[Math.floor(Math.random() * voiceLines.length)]}*`;
 		}
 	}
 ]
@@ -62,14 +82,14 @@ const games: Game[] = [
 export default {
 	async scheduled(
 		controller: ScheduledController,
-		env: Env | any,
+		env: Env,
 		ctx: ExecutionContext
 	): Promise<void> {
 		console.log(controller.scheduledTime, controller.cron);
 		const performCheckIn = async () => {
 			for (let game of games){
 				console.log("Checking in for ", game.name);
-				await autoDailyCheckIn(game, env.DISCORD_WEBHOOK, env.ACCOUNT_COOKIE);
+				await autoDailyCheckIn(game, env);
 			}
 		}
 		ctx.waitUntil(performCheckIn());
@@ -80,9 +100,18 @@ export default {
 	},
 };
 
-async function checkIn(URL:HoyoverseURL, cookie:string){
+async function autoDailyCheckIn(
+	game:Game, 
+	{DISCORD_WEBHOOK:webhook, ACCOUNT_COOKIE:cookie, DISCORD_USER_ID:userId} : Env
+){	
+	await checkIn(game, cookie, userId);
+	console.log("Checked in status: ", game.discordPayload.content);
+	await notifyDiscordWebhook(webhook, game.discordPayload);
+}
+
+async function checkIn(game:Game, cookie:string, userId:string){
 	let result = "";
-	await fetch(URL, {
+	await fetch(game.url, {
 		method: 'POST',
 		headers: {
 			"Cookie": `${cookie}`
@@ -90,17 +119,11 @@ async function checkIn(URL:HoyoverseURL, cookie:string){
 	})
 	.then(res => res.text())
 	.then((data:any) => {result = JSON.parse(data).message});
-	return result;
-}
-
-async function autoDailyCheckIn(game:Game, webhook:string, cookie:string){	
-	let message = await checkIn(game.url, cookie);
-	if (!message || message === ""){
-		message = "Failed to check in";
-	}
-	console.log("Checked in status: ",message);
-	game.discordPayload.content = message;
-	await notifyDiscordWebhook(webhook, game.discordPayload);
+	
+	game.discordPayload.content = `<@${userId}>\n`;
+	game.discordPayload.content += (!result || result === "") ? "Failed to check in" 
+	: (result === "OK") ? game.successMessage!() 
+	: `*${result}*`;
 }
 
 async function notifyDiscordWebhook(

@@ -57,7 +57,7 @@ const games: Game[] = [
 				"I can put these to good use.",
 				"Ha, at least good luck doesn't discriminate by clan.",
 			];
-			return `Successfully checked in!\n\n *${voiceLines[Math.floor(Math.random() * voiceLines.length)]}*`;
+			return `Successfully checked in!\n\n *${getRandom(voiceLines)}*`;
 		}
 	},
 	{
@@ -74,10 +74,14 @@ const games: Game[] = [
 				"Not bad.",
 				"...Doesn't look very interesting.",
 			];
-			return `Successfully claimed daily rewards!\n\n *${voiceLines[Math.floor(Math.random() * voiceLines.length)]}*`;
+			return `Successfully claimed daily rewards!\n\n *${getRandom(voiceLines)}*`;
 		}
 	}
 ]
+
+function getRandom(arr:any[]):any{
+	return arr[Math.floor(Math.random() * arr.length)];
+}
 
 export default {
 	async scheduled(

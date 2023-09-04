@@ -133,7 +133,7 @@ async function checkIn(game:Game, cookie:string, userId:string, isSilent:boolean
 	.then(res => res.text())
 	.then((data:any) => {result = JSON.parse(data).message});
 	
-	game.discordPayload.content = isSilent ? `<@${userId}>\n` : "[Silent Notification]\n";
+	game.discordPayload.content = isSilent ? "[Silent Notification]\n" : `<@${userId}>\n` ;
 	game.discordPayload.content += (!result || result === "") ? "Failed to check in" 
 	: (result === "OK") ? game.successMessage!() 
 	: `*${result}*`;

@@ -70,9 +70,8 @@ const games: Game[] = [
 		},
 		successMessage(): string {
 			const voiceLines = [
-				"Oh thanks, but no thanks.",
+				"Hmm. We can use it.",
 				"Not bad.",
-				"...Doesn't look very interesting.",
 			];
 			return `Successfully claimed daily rewards!\n\n *${getRandom(voiceLines)}*`;
 		}
@@ -100,20 +99,30 @@ export default {
 	},
 	async fetch(request:Request, env:Env, context:ExecutionContext) : Promise<Response>{
 		let result = "Personal auto daily check-in every 12 AM";
+		if(request.url.includes("now")){
+			const performCheckIn = async () => {
+				for (let game of games){
+					console.log("Checking in for ", game.name);
+					await autoDailyCheckIn(game, env, false);
+				}
+			}
+			context.waitUntil(performCheckIn());
+		}
 		return new Response(result, { status: 200 });
 	},
 };
 
 async function autoDailyCheckIn(
 	game:Game, 
-	{DISCORD_WEBHOOK:webhook, ACCOUNT_COOKIE:cookie, DISCORD_USER_ID:userId} : Env
+	{DISCORD_WEBHOOK:webhook, ACCOUNT_COOKIE:cookie, DISCORD_USER_ID:userId} : Env,
+	isSilent:boolean = true
 ){	
-	await checkIn(game, cookie, userId);
+	await checkIn(game, cookie, userId, isSilent);
 	console.log("Checked in status: ", game.discordPayload.content);
 	await notifyDiscordWebhook(webhook, game.discordPayload);
 }
 
-async function checkIn(game:Game, cookie:string, userId:string){
+async function checkIn(game:Game, cookie:string, userId:string, isSilent:boolean = true){
 	let result = "";
 	await fetch(game.url, {
 		method: 'POST',
@@ -124,7 +133,7 @@ async function checkIn(game:Game, cookie:string, userId:string){
 	.then(res => res.text())
 	.then((data:any) => {result = JSON.parse(data).message});
 	
-	game.discordPayload.content = `<@${userId}>\n`;
+	game.discordPayload.content = isSilent ? `<@${userId}>\n` : "[Silent Notification]\n";
 	game.discordPayload.content += (!result || result === "") ? "Failed to check in" 
 	: (result === "OK") ? game.successMessage!() 
 	: `*${result}*`;

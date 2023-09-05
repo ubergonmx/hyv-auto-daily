@@ -55,7 +55,6 @@ const games: Game[] = [
 			const voiceLines = [
 				"What do we have here...",
 				"I can put these to good use.",
-				"Ha, at least good luck doesn't discriminate by clan.",
 			];
 			return `Successfully checked in!\n\n *${getRandom(voiceLines)}*`;
 		}
@@ -106,6 +105,7 @@ export default {
 					await autoDailyCheckIn(game, env, false);
 				}
 			}
+
 			context.waitUntil(performCheckIn());
 		}
 		return new Response(result, { status: 200 });

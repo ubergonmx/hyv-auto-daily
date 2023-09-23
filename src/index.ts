@@ -109,7 +109,7 @@ export default {
       const performCheckIn = async () => {
         for (let game of games) {
           console.log("Checking in for ", game.name);
-          await autoDailyCheckIn(game, env, false);
+          await autoDailyCheckIn(game, env, false, true);
         }
       };
 
@@ -126,12 +126,13 @@ async function autoDailyCheckIn(
     ACCOUNT_COOKIE: cookie,
     DISCORD_USER_ID: userId,
   }: Env,
-  isSilent: boolean = true
+  isSilent: boolean = true,
+  isForced: boolean = false
 ) {
   const firstCheckIn = await checkIn(game, cookie, userId);
   const secondCheckIn = await checkIn(game, cookie, userId);
 
-  if (firstCheckIn === secondCheckIn) {
+  if (!isForced && firstCheckIn === secondCheckIn) {
     // Failed to check in because of captcha/verification
     game.discordPayload.content = `<@${userId}>\n Failed to check in because of captcha/verification. Login to the app and check in manually`;
   } else {
